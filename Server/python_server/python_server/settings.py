@@ -37,11 +37,29 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    # 'django.contrib.sites',
     'rest_framework',
     'corsheaders',
-    'pydb.apps.PydbConfig'
+    'pydb',
+    'allauth',
+    'allauth.account',
+    'allauth.socialaccount',
+    'allauth.socialaccount.providers.google',
+    'gamehubauth',
 ]
 
+
+SOCIALACCOUNT_PROVIDERS = {
+    'google': {
+        'SCOPE': [
+            'profile',
+            'email',
+        ],
+        'AUTH_PARAMS': {
+            'access_type': 'online',
+        }
+    }
+}
 CORS_ORIGIN_ALLOW_ALL = True
 
 MIDDLEWARE = [
@@ -82,9 +100,9 @@ WSGI_APPLICATION = 'python_server.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'dbtest',
+        'NAME': 'dbtest2',
         'USER': 'postgres',
-        'PASSWORD': 'mary',
+        'PASSWORD': 'maca1234',
         'HOST': 'localhost',
         'PORT': '5432'
     }
@@ -131,3 +149,7 @@ STATIC_URL = 'static/'
 # https://docs.djangoproject.com/en/4.0/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+AUTHENTICATION_BACKENDS = (
+    'django.contrib.auth.backends.ModelBackend',
+    'allauth.account.auth_backends.AuthenticationBackend',
+)
