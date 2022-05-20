@@ -49,28 +49,31 @@ module.exports = (io) => {
     });
   });
 
+  // Handler for play with random user event
   const randomUserHandler = async function (data) {
     {
+      // this references the current socket
       const socket = this;
+
       // get all users in lobby
       const playersInLobby = await tictactoe.in("lobby").fetchSockets();
 
       // check if there are users in lobby and this user isn't in the lobby
       if (playersInLobby.length > 0 && !playersInLobby.includes(socket)) {
         const gameRoom = uniqid("gameroom");
-        const player = playersInLobby[0]; // first player in lobby
+        const opponent = playersInLobby[0]; // first player in lobby
 
         // remove matched player from lobby
-        player.leave("lobby");
+        opponent.leave("lobby");
 
         // add players to a new game room
         socket.join(gameRoom);
         socket.gameRoom = gameRoom;
-        player.join(gameRoom);
-        player.gameRoom = gameRoom;
+        opponent.join(gameRoom);
+        opponent.gameRoom = gameRoom;
 
-        // notify players of found user
-        player.emit(
+        // notify players of found match
+        opponent.emit(
           "found match",
           socket.userid,
           socket.username,
@@ -83,8 +86,8 @@ module.exports = (io) => {
 
         socket.emit(
           "found match",
-          player.userid,
-          player.username,
+          opponent.userid,
+          opponent.username,
           {
             start: false,
             player: "O",
@@ -99,8 +102,11 @@ module.exports = (io) => {
     }
   };
 
+  // Handler for play with friend event
   const friendHandler = async function (data) {
+    // this references the current socket
     const socket = this;
+
     //check if friend is online
     const friendSockets = await io.of("/users").in(data.userid).allSockets();
     const friendIsOnline = friendSockets.size !== 0;
@@ -117,8 +123,12 @@ module.exports = (io) => {
     }
   };
 
+  // Handler for next player event
   const nextPlayerHandler = function (data) {
+    // this references the current socket
+
     const socket = this;
+
     // emits an event to the other player
     socket.to(socket.gameRoom).emit("turn", data);
     // socket.to(socket.userid).to(data.roomid).emit("turn", { changes: "" });
