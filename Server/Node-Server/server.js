@@ -27,79 +27,7 @@ app.use(express.json());
 app.use(cors(corsConfig));
 app.use("/test", TestRouter);
 
-// Socket.io middlewares
-const tictactoe = io.of("/tictactoe");
-// find a way to target all namespaces
-tictactoe.use(SocketCookieParser);
-tictactoe.use(requireAuth);
-tictactoe.use(SocketSession);
-io.use(SocketCookieParser);
-io.use(requireAuth);
-
-tictactoe.on("connection", async (socket) => {
-  console.log("socket connnected", socket.userid);
-  socket.join(socket.userid);
-
-  socket.on("play:random-user", async (data) => {
-    // get all users in lobby
-    const playersInLobby = await tictactoe.in("lobby").fetchSockets();
-
-    // check if there are users in lobby
-    if (playersInLobby.length > 0 && !playersInLobby.includes(socket)) {
-      const gameRoom = uniqid("gameroom");
-      const player = playersInLobby[0]; // first player in lobby
-
-      // remove found player from lobby
-      player.leave("lobby");
-
-      // add players to a new game room
-      socket.join(gameRoom);
-      socket.gameRoom = gameRoom;
-      player.join(gameRoom);
-      player.gameRoom = gameRoom;
-
-      // notify players of found user
-      player.emit("found match", socket.userid, socket.username);
-      socket.emit("found match", player.userid, player.username);
-    } else {
-      // add this user to lobby & notify user to wait
-      socket.join("lobby");
-      socket.emit("waiting in lobby", "waiting");
-    }
-  });
-
-  socket.on("play:friend", async (data) => {
-    //check if friend is online
-    const friendSockets = await tictactoe.in(data.userid).allSockets();
-    const friendIsOnline = friendSockets !== 0;
-    if (friendIsOnline) {
-      // send friend a game request and add this player to the new gameroom
-      const gameroom = uniqid();
-      tictactoe
-        .to(data.userid)
-        .emit("game request", socket.userid, socket.username, gameroom);
-      socket.join(gameroom);
-    } else {
-      socket.emit("friend offline", data.userid);
-    }
-  });
-
-  socket.on("next-player", (data) => {
-    // emits an event to the other player
-    console.log(data);
-    // socket.to(socket.userid).to(data.roomid).emit("turn", { changes: "" });
-    // socket.session.room = "something";
-  });
-
-  socket.on("gameOver", (data) => {
-    // ends the game
-    // the game is ended if a user wins or they draw
-  });
-
-  socket.on("disconnect", async () => {
-    console.log("client disconnected", socket.userid);
-  });
-});
+require("./Sockets/tictactoe")(io);
 
 io.on("connection", async (socket) => {
   // send all online users to the client
@@ -107,8 +35,8 @@ io.on("connection", async (socket) => {
   for (let [_, userSocket] of io.of("/").sockets) {
     if (userSocket.username !== socket.username)
       users.push({
-        userid: socket.userid,
-        username: socket.username,
+        userid: userSocket.userid,
+        username: userSocket.username,
       });
   }
 
