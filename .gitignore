@@ -132,3 +132,7 @@ dmypy.json
 /server/Node-Server/node_modules
 /server/Node-Server/.env
 /dump.rdb
+
+# python stuff
+/server/python_server/Pipfile
+/server/python_server/pipfile.lock
