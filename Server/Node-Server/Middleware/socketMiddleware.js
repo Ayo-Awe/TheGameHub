@@ -12,6 +12,8 @@ const requireAuth = (socket, next) => {
       jwt.verify(socket.cookies.token, process.env.SECRET, (err, decoded) => {
         socket.userid = decoded.userid;
         socket.username = decoded.username;
+        if (socket.handshake.query.gameRoom)
+          socket.gameRoom = socket.handshake.query.gameRoom;
       });
       next();
     } catch (error) {
